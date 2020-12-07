@@ -1,4 +1,4 @@
-# Minesweeper-
+# Minesweeper
 Jogo em C++ utilizando a biblioteca SFML 
 
 Para jogar, deve-se ter um compilador de C++ (g++) e a API SFML instalada.
