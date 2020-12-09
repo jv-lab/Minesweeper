@@ -144,6 +144,9 @@ int main(){
         out << ranking[i].cliques << " ";
         out << ranking[i].sec << endl;
     }
+
+    arq.close();
+    out.close();
     
     return 0;
 }
