@@ -1,18 +1,59 @@
 //Powered by Zannatinha e Joao
 
-#include<SFML/Graphics.hpp>
-#include<time.h>
+#include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <fstream>
+#include <iostream>
+#include <ctime>
+#include <algorithm>
+
 
 using namespace sf;
+using namespace std;
 
+struct info{
+    int cliques, sec;
+};
+
+bool cmp(const info &a, const info &b) { //para ordenacao
+    return a.cliques > b.cliques || (a.cliques == b.cliques && a.sec < b.sec);
+}
+
+info ranking[6];
 
 int main(){
 
+    //declarando variaveis
+
+    info player;
+    player.cliques = 0;
+    
+    time_t t1, t2;
+    t1 = time(NULL); //tempo inicial
+
+    //configurando fonte e texto de game over
+    Font font;
+    font.loadFromFile("images/small_font.ttf");
+    Text text;
+    text.setFont(font); 
+    text.setCharacterSize(48); 
+    text.setOutlineColor(Color::Black);
+    text.setFillColor(Color::Red);
+    text.setStyle(Text::Style::Bold);
+    text.setString("Game Over!");
+
+    //arquivo txt para ranking
+    string file = "images/ranking.txt";
+    ifstream arq;
+    ofstream out;
+    out.open(file);
+    arq.open(file);
+
     srand(time(0));
 
-    RenderWindow app(VideoMode(400, 400), "Minesweeper"); //abre janela e da o nome de "Minesweeper"
+    RenderWindow app(VideoMode(400,400), "Minesweeper"); //abre janela e da o nome de "Minesweeper"
 
-    //declarando variaveis e vetores
     int w = 32;
     int grid[12][12];
     int sgrid[12][12]; // Para mostrar o grid
@@ -30,7 +71,7 @@ int main(){
             else grid[i][j] = 0;
         }
 
-    for (int i=1; i<11; i++) //define os valores do vetor grid, para colocar as respectivas texturas depois
+    for (int i=1; i<11; i++) //atualiza os valores do vetor grid, para colocar as respectivas texturas com numeros
         for (int j=1; j<11; j++){
             int n = 0;
             if (grid[i][j] == 9) continue;
@@ -52,17 +93,26 @@ int main(){
         int x = pos.x / w;
         int y = pos.y / w;
 
-        Event e; 
+        Event e;
+        
         while(app.pollEvent(e)){ //detecta se um evento fecha o programa ou se um evento de mouse indica uma jogada, e a realiza
             if(e.type == Event::Closed)
                 app.close();
 
             if(e.type == Event::MouseButtonPressed)
-                if(e.key.code == Mouse::Left) sgrid[x][y] = grid[x][y];
-                else if(e.key.code == Mouse::Right) sgrid[x][y] = 11;
+                if(e.key.code == Mouse::Left){
+                    sgrid[x][y] = grid[x][y];
+                    if(grid[x][y] == 9){ 
+                        t2 = time(NULL); //pega o tempo do game over
+                        app.draw(text);
+                    } else if(grid[x][y] != 8 && grid[x][y] != 9 && grid[x][y] != 10 && grid[x][y] != 11)
+                        player.cliques += 1; //quantidade de jogadas +1
+                }
+                else if(e.key.code == Mouse::Right) sgrid[x][y] = 11; //colocar bandeira
+                
         }
 
-        app.clear(Color::Transparent);
+        app.clear(Color::White);
 
         for(int i=1; i<11; i++)
             for(int j=1; j<11; j++){
@@ -78,6 +128,23 @@ int main(){
         
     }
 
-  return 0;
+    player.sec = difftime(t2, t1);
+
+    for(int i=1; i<7; i++){ //ler txt
+        arq >> ranking[i].cliques;
+        arq >> ranking[i].sec;
+    }
+
+    ranking[0].cliques = player.cliques;
+    ranking[0].sec = player.sec;
+
+    stable_sort(ranking, ranking+6, cmp); //ordenar ranking
+
+    for(int i=0; i<6; i++){ //printar ranking atualizado no txt
+        out << ranking[i].cliques << " ";
+        out << ranking[i].sec << endl;
+    }
+    
+    return 0;
 }
 
